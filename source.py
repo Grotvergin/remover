@@ -111,5 +111,3 @@ class RemovalRequest:
                 f"📅 План: {self.desired}\n"
                 f"☑️ Удалено: {self.completed}\n"
                 f"📖 Расписание и коэффициенты:\n{self.display_schedule_and_coefs()}")
-
-print(RemovalRequest('ex', 1))
