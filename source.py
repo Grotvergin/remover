@@ -110,4 +110,4 @@ class RemovalRequest:
         return (f"🔊 Канал: {self.channel}\n"
                 f"📅 План: {self.desired}\n"
                 f"☑️ Удалено: {self.completed}\n"
-                f"📖 Расписание и коэффициенты:\n{self.display_schedule_and_coefs()}")
+                f"📖 Расписание и коэффициенты:\n{self.display_schedule_and_coefs()}\n")

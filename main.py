@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from source import (RemovalRequest, BOT, MENU_BTNS, RETURN_BTN, TG_MAX_MSG_LEN, ARCHIVE_DIR,
-                    NOTIF_TIME_DELTA, LONG_SLEEP, MAX_DAYS_OFFLINE, CLIENT)
+                    NOTIF_TIME_DELTA, LONG_SLEEP, MAX_DAYS_OFFLINE, CLIENT, FILE_NAME)
 from traceback import format_exc
 from asyncio import run, get_event_loop, create_task, gather
 from threading import Thread
@@ -27,10 +27,13 @@ def BotPolling():
 
 def SendRequests(user_id, list_of_requests):
     msg = ''
+    cnt = 1
     if not list_of_requests:
         BOT.send_message(user_id, '💤 Нет заявок')
         return
     for req in list_of_requests:
+        msg += f'––––– {cnt} –––––\n'
+        cnt += 1
         msg += str(req)
         if len(msg) > TG_MAX_MSG_LEN:
             BOT.send_message(user_id, msg, parse_mode='HTML')
@@ -82,11 +85,11 @@ async def ProcessRequests():
                 Stamp(f'For channel {req.channel} expected = {expected}, to_add = {to_add}, hours_passed = {hours_passed}, remaining = {remaining_seconds}', 'i')
                 if to_add > 0:
                     try:
-                        await DeleteUsers(req, to_add)
+                        successfully_deleted = await DeleteUsers(req, to_add)
+                        req.completed += successfully_deleted
                     except ChatAdminRequiredError:
                         Stamp(f'Need to set account as an admin in channel {req.channel}', 'w')
                         sendToMultipleUsers(ADM_IDS, f'❗️Назначьте аккаунт {PHONE} администратором в канале {req.channel}')
-                req.completed += to_add
         except Exception as e:
             Stamp(f'Uncaught exception in processor happened: {e}', 'w')
             sendToMultipleUsers(ADM_IDS, f'🔴 Ошибка в ProcessRequests: {e}')
@@ -95,11 +98,8 @@ async def ProcessRequests():
 
 
 async def MakeArchive():
-    now = datetime.now()
-    year = now.year
-    month = now.month
-    day = now.day
-    archive_dir = join('archive', str(year), str(month), str(day))
+    yesterday = datetime.now() - timedelta(days=1)
+    archive_dir = join('archive', str(yesterday.year), str(yesterday.month), str(yesterday.day))
     makedirs(archive_dir, exist_ok=True)
     file_path = join(archive_dir, 'requests.json')
     RemovalRequest.save_requests_to_file(source.REQUESTS, file_path)
@@ -107,6 +107,8 @@ async def MakeArchive():
 
 
 async def DeleteUsers(req, to_add, client=source.CLIENT):
+    successfully_deleted = 0
+
     async for user in client.iter_participants(req.channel):
         if to_add <= 0:
             break
@@ -115,6 +117,7 @@ async def DeleteUsers(req, to_add, client=source.CLIENT):
             await client.kick_participant(req.channel, user)
             Stamp(f'Deleted account was removed from channel {req.channel}', 'i')
             to_add -= 1
+            successfully_deleted += 1
             continue
 
         last_seen = user.status
@@ -127,12 +130,14 @@ async def DeleteUsers(req, to_add, client=source.CLIENT):
                     await client.kick_participant(req.channel, user)
                     Stamp(f'Offline account was removed from channel {req.channel}', 'i')
                     to_add -= 1
+                    successfully_deleted += 1
                     continue
 
         elif isinstance(last_seen, UserStatusLastMonth):
             await client.kick_participant(req.channel, user)
             Stamp(f'Account inactive for a month was removed from channel {req.channel}', 'i')
             to_add -= 1
+            successfully_deleted += 1
             continue
 
     if to_add > 0:
@@ -141,9 +146,12 @@ async def DeleteUsers(req, to_add, client=source.CLIENT):
         for user in random_users:
             await client.kick_participant(req.channel, user)
             to_add -= 1
+            successfully_deleted += 1
             Stamp(f'Random account was removed from channel {req.channel}', 'i')
             if to_add <= 0:
                 break
+
+    return successfully_deleted
 
 
 def CreateRequest(message):
@@ -221,7 +229,7 @@ def ShowFromArchive(message):
     year = date_obj.strftime('%Y')
     month = date_obj.strftime('%m')
     day = date_obj.strftime('%d')
-    archive_path = join(ARCHIVE_DIR, year, month, day)
+    archive_path = join(ARCHIVE_DIR, year, month, day, FILE_NAME)
     if exists(archive_path):
         BOT.send_message(message.from_user.id, f'📂 Архив за {date_str} найден.')
         archive = RemovalRequest.load_requests_from_file(archive_path)
