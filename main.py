@@ -68,6 +68,7 @@ async def ProcessRequests():
                 Stamp('Updating schedules and archiving the previous day', 'i')
                 await MakeArchive()
                 for req in source.REQUESTS:
+                    req.completed = 0
                     req.create_schedule()
                 source.LAST_SCHEDULE_UPDATE = now
             if now - source.LAST_NOTIF_PROCESSOR > timedelta(minutes=NOTIF_TIME_DELTA):
