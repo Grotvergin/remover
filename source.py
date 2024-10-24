@@ -41,6 +41,7 @@ class RemovalRequest:
         self.coefs = list(coefs)
         self.schedule = [0] * 24
         self.create_schedule()
+        self.reset_schedule_before_current_hour()
 
     def to_dict(self):
         """Преобразование заявки в словарь для сериализации."""
@@ -108,6 +109,12 @@ class RemovalRequest:
             rows.append(f"{hour} | {schedule} | {coef}")
 
         return "\n".join(rows)
+
+    def reset_schedule_before_current_hour(self):
+        """Обнуление элементов расписания до текущего часа."""
+        current_hour = datetime.now().hour
+        for i in range(current_hour):
+            self.schedule[i] = 0
 
     def __str__(self):
         return (f"🔊 Канал: {self.channel}\n"
