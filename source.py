@@ -41,7 +41,6 @@ class RemovalRequest:
         self.coefs = list(coefs)
         self.schedule = [0] * 24
         self.create_schedule()
-        self.reset_schedule_before_current_hour()
 
     def to_dict(self):
         """Преобразование заявки в словарь для сериализации."""

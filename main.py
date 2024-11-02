@@ -188,7 +188,7 @@ def SetDesiredRemoval(message, channel):
         desired = int(message.text)
         if desired > 0:
             request = RemovalRequest(channel[1:], desired)
-            request.create_schedule()
+            request.reset_schedule_before_current_hour()
             source.REQUESTS.append(request)
             RemovalRequest.save_requests_to_file(source.REQUESTS)
             BOT.send_message(message.from_user.id, '✅ Заявка успешно создана!')
