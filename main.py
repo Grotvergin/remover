@@ -11,7 +11,7 @@ from os.path import join, exists
 from os import makedirs
 from secret import ADM_IDS, PASSWORD, PHONE
 from telethon.tl.types import UserStatusOffline, UserStatusLastMonth
-from telethon.errors.rpcerrorlist import ChatAdminRequiredError
+from telethon.errors.rpcerrorlist import ChatAdminRequiredError, UserAdminInvalidError
 from random import sample
 from pytz import utc
 
@@ -91,6 +91,9 @@ async def ProcessRequests():
                     except ChatAdminRequiredError:
                         Stamp(f'Need to set account as an admin in channel {req.channel}', 'w')
                         sendToMultipleUsers(ADM_IDS, f'❗️Назначьте аккаунт {PHONE} администратором в канале {req.channel}')
+                    except UserAdminInvalidError:
+                        Stamp(f'Not an admin/tried to ban another admin in channel {req.channel}', 'w')
+                        sendToMultipleUsers(ADM_IDS, f'📛 Аккаунт {PHONE} не админ или пытался удалить другого админа в канале {req.channel}')
         except Exception as e:
             Stamp(f'Uncaught exception in processor happened: {e}', 'w')
             sendToMultipleUsers(ADM_IDS, f'🔴 Ошибка в ProcessRequests: {e}')
