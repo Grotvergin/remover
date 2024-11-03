@@ -171,6 +171,12 @@ def CreateRequest(message):
         channel = '@' + channel.split('/')[-1]
     elif not channel.startswith('@'):
         channel = '@' + channel
+
+    if RemovalRequest.request_exists(channel, source.REQUESTS):
+        BOT.send_message(message.from_user.id, '❌ Заявка для этого канала уже существует.')
+        ShowButtons(message, MENU_BTNS, '❔ Выберите действие:')
+        return
+
     try:
         chat = BOT.get_chat(channel)
         if chat.type == 'channel':

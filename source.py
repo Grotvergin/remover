@@ -43,6 +43,11 @@ class RemovalRequest:
         self.schedule = [0] * 24
         self.create_schedule()
 
+    @staticmethod
+    def request_exists(channel, requests):
+        """Проверяет, есть ли заявка для указанного канала в списке заявок."""
+        return any(req.channel == channel for req in requests)
+
     def to_dict(self):
         """Преобразование заявки в словарь для сериализации."""
         return {
