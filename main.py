@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
 from source import (RemovalRequest, BOT, MENU_BTNS, RETURN_BTN, TG_MAX_MSG_LEN, ARCHIVE_DIR,
-                    NOTIF_TIME_DELTA, LONG_SLEEP, MAX_DAYS_OFFLINE, CLIENT, FILE_NAME)
+                    NOTIF_TIME_DELTA, LONG_SLEEP, MAX_DAYS_OFFLINE, CLIENT, FILE_NAME, DELETION_SLEEP)
 from traceback import format_exc
-from asyncio import run, get_event_loop, create_task, gather
+from asyncio import run, get_event_loop, create_task, gather, sleep as async_sleep
 from threading import Thread
 from common import ShowButtons, Stamp, AsyncSleep
 import source
@@ -119,9 +119,10 @@ async def DeleteUsers(req, to_add, client=source.CLIENT):
 
         if user.deleted:
             await client.kick_participant(req.channel, user)
-            Stamp(f'Deleted account was removed from channel {req.channel}', 'i')
+            Stamp(f'Deleted account {user} was removed from channel {req.channel}', 'i')
             to_add -= 1
             successfully_deleted += 1
+            await async_sleep(DELETION_SLEEP)
             continue
 
         last_seen = user.status
@@ -132,16 +133,18 @@ async def DeleteUsers(req, to_add, client=source.CLIENT):
                 days_offline = (now_utc - last_online_utc).days
                 if days_offline > MAX_DAYS_OFFLINE:
                     await client.kick_participant(req.channel, user)
-                    Stamp(f'Offline account was removed from channel {req.channel}', 'i')
+                    Stamp(f'Offline account {user} was removed from channel {req.channel}', 'i')
                     to_add -= 1
                     successfully_deleted += 1
+                    await async_sleep(DELETION_SLEEP)
                     continue
 
         elif isinstance(last_seen, UserStatusLastMonth):
             await client.kick_participant(req.channel, user)
-            Stamp(f'Account inactive for a month was removed from channel {req.channel}', 'i')
+            Stamp(f'Account {user} inactive for a month was removed from channel {req.channel}', 'i')
             to_add -= 1
             successfully_deleted += 1
+            await async_sleep(DELETION_SLEEP)
             continue
 
     if to_add > 0:
@@ -151,7 +154,8 @@ async def DeleteUsers(req, to_add, client=source.CLIENT):
             await client.kick_participant(req.channel, user)
             to_add -= 1
             successfully_deleted += 1
-            Stamp(f'Random account was removed from channel {req.channel}', 'i')
+            Stamp(f'Random account {user} was removed from channel {req.channel}', 'i')
+            await async_sleep(DELETION_SLEEP)
             if to_add <= 0:
                 break
 
