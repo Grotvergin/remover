@@ -9,7 +9,7 @@ import source
 from telebot.apihelper import ApiException
 from os.path import join, exists
 from os import makedirs
-from secret import ADM_IDS, PASSWORD, PHONE
+from secret import ADM_IDS, PASSWORD, PHONE, WORKER_TG_ID
 from telethon.tl.types import UserStatusOffline, UserStatusLastMonth
 from telethon.errors.rpcerrorlist import ChatAdminRequiredError, UserAdminInvalidError
 from random import sample
@@ -149,8 +149,11 @@ async def DeleteUsers(req, to_add, client=source.CLIENT):
 
     if to_add > 0:
         users = await client.get_participants(req.channel)
-        random_users = sample(users, min(to_add, len(users)))
+        random_users = sample(users, min(to_add + 1, len(users)))
         for user in random_users:
+            if user.id == WORKER_TG_ID:
+                Stamp(f'Skipping worker account {user.id} {user.username}', 'i')
+                continue
             await client.kick_participant(req.channel, user)
             to_add -= 1
             successfully_deleted += 1
