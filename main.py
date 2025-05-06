@@ -218,10 +218,10 @@ def DeleteRequest(message):
     if message.text == RETURN_BTN[0]:
         ShowButtons(message, MENU_BTNS, '❔ Выберите действие:')
         return
-    channel = message.text.strip()
+    channel = message.text.strip().lower()
     found = False
     for req in source.REQUESTS:
-        if req.channel == channel:
+        if req.channel.lower() == channel:
             source.REQUESTS.remove(req)
             found = True
             RemovalRequest.save_requests_to_file(source.REQUESTS)
