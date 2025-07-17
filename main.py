@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from source import (RemovalRequest, BOT, MENU_BTNS, RETURN_BTN, TG_MAX_MSG_LEN, ARCHIVE_DIR,
-                    NOTIF_TIME_DELTA, LONG_SLEEP, MAX_DAYS_OFFLINE, CLIENT, FILE_NAME, DELETION_SLEEP)
+                    NOTIF_TIME_DELTA, LONG_SLEEP, MAX_DAYS_OFFLINE, CLIENT, FILE_NAME)
 from traceback import format_exc
 from asyncio import run, get_event_loop, create_task, gather, sleep as async_sleep
 from threading import Thread
@@ -122,7 +122,6 @@ async def DeleteUsers(req, to_add, client=source.CLIENT):
             Stamp(f'Deleted account {user.id} {user.username} was removed from channel {req.channel}', 'i')
             to_add -= 1
             successfully_deleted += 1
-            await async_sleep(DELETION_SLEEP)
             continue
 
         last_seen = user.status
@@ -136,7 +135,6 @@ async def DeleteUsers(req, to_add, client=source.CLIENT):
                     Stamp(f'Offline account {user.id} {user.username} was removed from channel {req.channel}', 'i')
                     to_add -= 1
                     successfully_deleted += 1
-                    await async_sleep(DELETION_SLEEP)
                     continue
 
         elif isinstance(last_seen, UserStatusLastMonth):
@@ -144,7 +142,6 @@ async def DeleteUsers(req, to_add, client=source.CLIENT):
             Stamp(f'Account {user.id} {user.username} inactive for a month was removed from channel {req.channel}', 'i')
             to_add -= 1
             successfully_deleted += 1
-            await async_sleep(DELETION_SLEEP)
             continue
 
     if to_add > 0:
@@ -158,7 +155,6 @@ async def DeleteUsers(req, to_add, client=source.CLIENT):
             to_add -= 1
             successfully_deleted += 1
             Stamp(f'Random account {user.id} {user.username} was removed from channel {req.channel}', 'i')
-            await async_sleep(DELETION_SLEEP)
             if to_add <= 0:
                 break
 
